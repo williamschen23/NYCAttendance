@@ -1,0 +1,12 @@
+{
+    "NAME": "",
+    "POPULATION": "",
+    "DD-MM-YYYY": {
+        "percentage" : "number",
+        "approx_total" : "population * percentage"
+    },
+    "MM-DD-YYYY" : {
+        "percentage" : "number",
+        "approx_total" : "population * percentage"
+    }
+}
