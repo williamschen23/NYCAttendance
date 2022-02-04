@@ -1,9 +1,14 @@
-from datetime import datetime
-import pymongo
+# selenium imports
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+
+# misc imports
+from datetime import datetime
+from pymongo import MongoClient
 from bs4 import BeautifulSoup
+from mongodb import collecting_data
 
 # .env configuration
 from dotenv import load_dotenv
@@ -11,12 +16,12 @@ from os import getenv
 load_dotenv()
 
 link = getenv('mongo_link')
-client = pymongo.MongoClient(link)
+client = MongoClient(link)
 db = client.schools
 
 # apparently I need this to use ONE GOD DAMN DROPDOWN???
-PATH = "/Applications/chromedriver"
-driver = webdriver.Chrome(PATH)
+ser = Service("/Applications/chromedriver")
+driver = webdriver.Chrome(service=ser)
 driver.get("https://www.nycenet.edu/PublicApps/Attendance.aspx")
 element = driver.find_element(By.ID, "ctl00_ContentPlaceHolder1_gvAttendance_ctl23_ddlPageSize")
 drp = Select(element)
@@ -37,8 +42,6 @@ for j in range(len(rows)):
     if j % 4 == 0:
         iterator += 1
 
-# TODO make it go into mongoDB
-
-print(data)
+collecting_data(data)
 driver.quit()
 
