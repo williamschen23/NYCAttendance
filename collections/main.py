@@ -5,8 +5,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 
 # misc imports
+import time
 from pymongo import MongoClient
-from mongodb import generate_data
+from mongodb import generate_data, generate_discord_data, generate_discord_population_data
 from bs4 import BeautifulSoup
 from json import dump, load
 
@@ -15,9 +16,8 @@ from dotenv import load_dotenv
 from os import getenv
 load_dotenv()
 
-link = getenv('mongo_link')
-client = MongoClient(link)
-db = client.schools
+start_time = time.time()
+link = getenv('MONGO_LINK')
 
 # apparently I need this to use ONE GOD DAMN DROPDOWN???
 # selects the max option for attendance website and gets the data
@@ -52,5 +52,10 @@ if sortedData[0][2] not in data_json:
     with open('data.json', 'w') as f:
         dump(data_json, f)
 
-# generates data for mongoDB
+# generates school data for MongoDB
 generate_data(sortedData)
+
+# generate discord data for MongoDB with and without population
+generate_discord_data(sortedData[0][2])
+generate_discord_population_data(sortedData[0][2])
+print(time.time() - start_time, " run time")
