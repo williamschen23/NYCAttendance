@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.service import Service
 # misc imports
 import time
 from pymongo import MongoClient
-from mongodb import generate_data, generate_discord_data, generate_discord_population_data
+from mongodb import request_data, generate_discord_data, generate_discord_population_data
 from bs4 import BeautifulSoup
 from json import dump, load
 
@@ -30,32 +30,15 @@ drp.select_by_index(3)
 
 # parsing through the data using Beautiful Soup
 soup = BeautifulSoup(driver.page_source, 'html.parser')
-data_list = soup.find_all("td")
+data = soup.find_all("td")
+data_list = [i.text for i in data]
 driver.quit()
 
-# init a nested data list and append data for each school for each []
-sortedData = [[] for _ in range(int(len(data_list)/4))]
-iterator = 0
-for j in range(len(data_list)):
-    sortedData[iterator].append(data_list[j].text)
-    if (j+1) % 4 == 0:
-        iterator += 1
-
 # this should be 1601
-print(len(sortedData))
-
-# adds the sortedData to a json for safe-keeping
-with open('data.json', 'r') as f:
-    data_json = load(f)
-if sortedData[0][2] not in data_json:
-    data_json[sortedData[0][2]] = sortedData
-    with open('data.json', 'w') as f:
-        dump(data_json, f)
-
-# generates school data for MongoDB
-generate_data(sortedData)
+print(int(len(data_list)/4))
+request_data(data_list)
 
 # generate discord data for MongoDB with and without population
-generate_discord_data(sortedData[0][2])
-generate_discord_population_data(sortedData[0][2])
+generate_discord_data(data_list[2])
+generate_discord_population_data(data_list[2])
 print(time.time() - start_time, " run time")

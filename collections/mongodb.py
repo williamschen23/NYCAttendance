@@ -14,26 +14,23 @@ discordCache = client.data.discord
 discordPopulationCache = client.data.discord_population
 
 
-# generates school data for all schools in nested_data
-def generate_data(nested_data):
-    date = nested_data[0][2]
-    for data in nested_data:
-        school_code = data[0]
-        school_name = data[1]
-        percentage = data[3]
+# generates school data from a list of all the data values from the nyc attendance website
+def request_data(data_list):
+    requests = []
+    for school_code, school_name, date, percentage in zip(*[iter(data_list)] * 4):
         if percentage == 'NS':
-            percentage = 0.0
+            percentage = 0
         percentage = float(percentage)
         if doc := collections.find_one({'CODE': school_code}):
             if 'POPULATION' in doc:
-                collections.update_one({'CODE': school_code}, {'$set': {date: {
+                requests.append(UpdateOne({'CODE': school_code}, {'$set': {date: {
                     "PERCENTAGE": percentage,
-                    "APPROX_TOTAL": floor(percentage/100 * doc['POPULATION'])
-                }}})
+                    "APPROX_TOTAL": floor(percentage / 100 * doc['POPULATION'])
+                }}}))
             else:
-                collections.update_one({'CODE': school_code}, {'$set': {date: {
+                requests.append(UpdateOne({'CODE': school_code}, {'$set': {date: {
                     "PERCENTAGE": percentage,
-                }}})
+                }}}))
         else:
             insertion = {
                 "NAME": school_name,
@@ -44,6 +41,7 @@ def generate_data(nested_data):
             }
             print("added " + school_name + " code: " + school_code)
             collections.insert_one(insertion)
+    collections.bulk_write(requests)
 
 
 # adds every data from today into a cache to use for discord
@@ -80,7 +78,7 @@ def generate_discord_population_data(date):
                 .sort(f'{date}.APPROX_TOTAL', -1)\
                 .limit(5):
             em1.add_field(
-                name=f'{counter}) {doc["NAME"]} ({doc["CODE"]}%)',
+                name=f'{counter}) {doc["NAME"]} ({doc["CODE"]})',
                 value=f'{doc[date]["APPROX_TOTAL"]} ({doc[date]["PERCENTAGE"]}%)',
                 inline=False,
             )
